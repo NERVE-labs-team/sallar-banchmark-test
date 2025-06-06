@@ -2,7 +2,7 @@ import { ManagerConfig } from '@sallar-network/server';
 import axios from 'axios';
 import { BenchmarkData } from './types';
 
-export const report_data_to_program_manager = async (
+export const report_data_to_node_manager = async (
   data: BenchmarkData,
   config: ManagerConfig
 ) => {

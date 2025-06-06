@@ -1,7 +1,7 @@
 import { InstanceManager, MinimalEventPayload } from '@sallar-network/server';
 import * as dotenv from 'dotenv';
-import { report_data_to_program_manager } from './requests';
 import { BenchmarkData } from './types';
+import { report_data_to_node_manager } from './requests';
 
 // Emit command to start actual benchmark
 export const on_worker_connected = (
@@ -23,7 +23,10 @@ const handle_benchmark_data = async (
     data.internet_speed
   );
 
-  await report_data_to_program_manager(data, manager.config);
+  if (!manager.config.dev_mode) {
+    console.log(`Report ${data.worker_id} worker benchmark data to database`);
+    await report_data_to_node_manager(data, manager.config);
+  }
 };
 
 // Log any errors
