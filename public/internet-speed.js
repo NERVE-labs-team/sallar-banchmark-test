@@ -5,8 +5,8 @@ const runTestCase = async () => {
   let speedInMbps = null;
 
   let imageLink =
-    'https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg'; // duży plik
-  let noCacheLink = imageLink + '?nocache=' + Math.random(); // unikamy cache
+    'https://upload.wikimedia.org/wikipedia/commons/3/3f/Fronalpstock_big.jpg';
+  let noCacheLink = imageLink + '?nocache=' + Math.random();
 
   image.onload = async function () {
     endTime = new Date().getTime();
@@ -43,15 +43,14 @@ const runTestCase = async () => {
 };
 
 export const runInternetSppedTest = async () => {
-  const ITERATIONS = 20;
+  const ITERATIONS = 10;
   let sum = 0;
 
   for (let i = 0; i < ITERATIONS; ++i) {
-    console.log(`Internet speed test #${i + 1}`);
     const result = await runTestCase();
     sum += result;
     await new Promise((r) => setTimeout(r, 100));
   }
 
-  return sum / ITERATIONS;
+  return Math.round(sum / ITERATIONS);
 };
