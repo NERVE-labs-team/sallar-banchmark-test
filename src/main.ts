@@ -1,7 +1,9 @@
 import { InstanceManager, MinimalEventPayload } from '@sallar-network/server';
 import * as dotenv from 'dotenv';
-import { BenchmarkData } from './types';
+import { BenchmarkData, EntityToken } from './types';
 import { report_data_to_node_manager } from './requests';
+
+let entity_token: string = '';
 
 // Emit command to start actual benchmark
 export const on_worker_connected = (
@@ -16,17 +18,10 @@ const handle_benchmark_data = async (
   data: BenchmarkData,
   manager: InstanceManager
 ) => {
-  console.log(
-    `${data.worker_id}: `,
-    data.cpu_points,
-    data.gpu_points,
-    data.internet_speed
-  );
+  console.log(`Bechmark finished. Result: ${JSON.stringify(data, null, 2)}`);
 
-  if (!manager.config.dev_mode) {
-    console.log(`Report ${data.worker_id} worker benchmark data to database`);
-    await report_data_to_node_manager(data, manager.config);
-  }
+  console.log(`Report ${data.worker_id} worker benchmark data to database`);
+  await report_data_to_node_manager(data, manager.config, entity_token);
 };
 
 // Log any errors
@@ -40,11 +35,15 @@ export const on_error = ({ worker_id }: MinimalEventPayload, err: any) => {
   const manager = new InstanceManager({
     public_path: `./public`,
     http_port: Number(process.env.PORT),
-    dev_mode: process.env.DEV_MODE === 'true',
+    dev_mode: true,
     node_manager_server: process.env.NODE_MANAGER_SERVER,
-    program_token: process.env.PROGRAM_TOKEN,
+  });
+
+  manager.on('entity-token', async (data: EntityToken, manager) => {
+    entity_token = data.entity_token;
   });
 
   manager.on('benchmark-finished', handle_benchmark_data);
+
   await manager.launch(on_worker_connected, on_error);
 })();

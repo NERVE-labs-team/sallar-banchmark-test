@@ -2,9 +2,13 @@ import { runInternetSppedTest } from './internet-speed.js';
 import { runWebGpuTest } from './gpu-points.js';
 import { runCpuTest } from './cpu-points.js';
 
-const program = new SallarNetworkClient.InstanceManager(io);
+const manager = new SallarNetworkClient.InstanceManager(io);
 
-program.on('perform-benchmark', async ({ value }, manager) => {
+manager.emit('entity-token', {
+  entity_token: window.location.href.split('#')[1].split(',')[2],
+});
+
+manager.on('perform-benchmark', async (_, manager) => {
   console.log('Measure internet speed...');
   const internetSpeed = await runInternetSppedTest();
   console.log(`Measured ${internetSpeed} Mb/s download speed`);
