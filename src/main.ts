@@ -1,12 +1,16 @@
 import { InstanceManager, MinimalEventPayload } from '@sallar-network/server';
 import * as dotenv from 'dotenv';
 import { BenchmarkData, EntityToken } from './types';
-import { report_data_to_node_manager } from './requests';
+import {
+  block_worker,
+  report_data_to_node_manager,
+  unblock_worker,
+} from './requests';
 
 let entity_token: string = '';
 
 // Emit command to start actual benchmark
-export const on_worker_connected = (
+export const on_worker_connected = async (
   { worker_id }: MinimalEventPayload,
   manager: InstanceManager
 ) => {
@@ -22,6 +26,7 @@ const handle_benchmark_data = async (
 
   console.log(`Report ${data.worker_id} worker benchmark data to database`);
   await report_data_to_node_manager(data, manager.config, entity_token);
+  await unblock_worker(manager.config, entity_token);
 };
 
 // Log any errors
@@ -41,6 +46,7 @@ export const on_error = ({ worker_id }: MinimalEventPayload, err: any) => {
 
   manager.on('entity-token', async (data: EntityToken, manager) => {
     entity_token = data.entity_token;
+    await block_worker(manager.config, entity_token);
   });
 
   manager.on('benchmark-finished', handle_benchmark_data);
