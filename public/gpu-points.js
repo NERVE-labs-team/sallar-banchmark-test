@@ -1,3 +1,22 @@
+const getGpuInfo = () => {
+  const canvas = document.createElement('canvas');
+  const gl =
+    canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+  if (!gl) {
+    return 'WebGL not supported';
+  }
+
+  const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+  if (debugInfo) {
+    const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+    const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+    return { vendor, renderer };
+  } else {
+    return 'WEBGL_debug_renderer_info not supported';
+  }
+};
+
 const runTestCase = async () => {
   if (!navigator.gpu) {
     console.log('WebGPU not supported');
@@ -51,5 +70,5 @@ export const runWebGpuTest = async () => {
     sum += result;
   }
 
-  return Math.round(sum / ITERATIONS);
+  return { gpuPoints: Math.round(sum / ITERATIONS), gpuInfo: getGpuInfo() };
 };

@@ -28,5 +28,5 @@ export const runCpuTest = () => {
     sum += result;
   }
 
-  return Math.round(sum / ITERATIONS);
+  return { cpuPoints: Math.round(sum / ITERATIONS) };
 };

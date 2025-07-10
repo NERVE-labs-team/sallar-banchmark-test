@@ -14,17 +14,19 @@ manager.on('perform-benchmark', async (_, manager) => {
   console.log(`Measured ${internetSpeed} Mb/s download speed`);
 
   console.log('Measure gpu points...');
-  const gpuPoints = await runWebGpuTest();
+  const { gpuPoints, gpuInfo } = await runWebGpuTest();
   console.log(`Measured ${gpuPoints} gpu points`);
+  console.log(`Gpu model: ${JSON.stringify(gpuInfo, null, 2)}`);
 
   console.log('Measure cpu points...');
-  const cpuPoints = runCpuTest();
+  const { cpuPoints } = runCpuTest();
   console.log(`Measured ${cpuPoints} cpu points`);
 
   console.log('Benchmark completed');
 
   manager.emit('benchmark-finished', {
     gpu_points: gpuPoints,
+    gpu_info: gpuInfo ? `${gpuInfo.vendor} ${gpuInfo.renderer}` : null,
     cpu_points: cpuPoints,
     internet_speed: internetSpeed,
   });
