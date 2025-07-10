@@ -1,4 +1,10 @@
-import { InstanceManager, MinimalEventPayload } from '@sallar-network/server';
+import {
+  ErrorHandler,
+  EventHandler,
+  InstanceManager,
+  MinimalEventPayload,
+  WorkerDisconnectedException,
+} from '@sallar-network/server';
 import * as dotenv from 'dotenv';
 import { BenchmarkData, EntityToken } from './types';
 import {
@@ -10,7 +16,7 @@ import {
 let entity_token: string = '';
 
 // Emit command to start actual benchmark
-export const on_worker_connected = async (
+export const on_worker_connected: EventHandler<MinimalEventPayload> = async (
   { worker_id }: MinimalEventPayload,
   manager: InstanceManager
 ) => {
@@ -30,7 +36,19 @@ const handle_benchmark_data = async (
 };
 
 // Log any errors
-export const on_error = ({ worker_id }: MinimalEventPayload, err: any) => {
+export const on_error: ErrorHandler = async (
+  { worker_id }: MinimalEventPayload,
+  err: any,
+  manager
+) => {
+  if (err instanceof WorkerDisconnectedException) {
+    console.log('Socket disconnected');
+
+    await unblock_worker(manager.config, entity_token);
+
+    return;
+  }
+
   console.log(`There is problem with worker "${worker_id}". Error: ${err}`);
 };
 
