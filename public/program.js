@@ -4,6 +4,8 @@ import { runCpuTest } from './cpu-points.js';
 
 const manager = new SallarNetworkClient.InstanceManager(io);
 
+console.log('I am ready');
+
 manager.emit('entity-token', {
   entity_token: window.location.href.split('#')[1].split(',')[2],
 });

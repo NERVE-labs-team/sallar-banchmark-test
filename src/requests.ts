@@ -13,7 +13,7 @@ export const report_data_to_node_manager = async (
       { ...data, entity_token }
     );
   } catch (err) {
-    throw new Error(`Cannot post benchmark data. Reason: ${err}`);
+    console.log(`Cannot post benchmark data. Reason: ${err}`);
   }
 };
 
@@ -26,7 +26,7 @@ export const block_worker = async (
       entity_token,
     });
   } catch (err) {
-    throw new Error(`Cannot block worker. Reason: ${err}`);
+    console.log(`Cannot block worker. Reason: ${err}`);
   }
 };
 
@@ -39,6 +39,6 @@ export const unblock_worker = async (
       entity_token,
     });
   } catch (err) {
-    throw new Error(`Cannot unblock worker. Reason: ${err}`);
+    console.log(`Cannot unblock worker. Reason: ${err}`);
   }
 };

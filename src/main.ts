@@ -1,6 +1,5 @@
 import {
   ErrorHandler,
-  EventHandler,
   InstanceManager,
   MinimalEventPayload,
   WorkerDisconnectedException,
@@ -13,15 +12,7 @@ import {
   unblock_worker,
 } from './requests';
 
-let entity_token: string = '';
-
-// Emit command to start actual benchmark
-export const on_worker_connected: EventHandler<MinimalEventPayload> = async (
-  { worker_id }: MinimalEventPayload,
-  manager: InstanceManager
-) => {
-  manager.emit('perform-benchmark', null, worker_id);
-};
+let entity_tokens: Map<string, string> = new Map();
 
 // Send benchmark data to node-manager
 const handle_benchmark_data = async (
@@ -31,8 +22,10 @@ const handle_benchmark_data = async (
   console.log(`Bechmark finished. Result: ${JSON.stringify(data, null, 2)}`);
 
   console.log(`Report ${data.worker_id} worker benchmark data to database`);
-  await report_data_to_node_manager(data, manager.config, entity_token);
-  await unblock_worker(manager.config, entity_token);
+  const token = entity_tokens.get(data.worker_id)!;
+  entity_tokens.delete(data.worker_id);
+  await report_data_to_node_manager(data, manager.config, token);
+  await unblock_worker(manager.config, token);
 };
 
 // Log any errors
@@ -42,10 +35,9 @@ export const on_error: ErrorHandler = async (
   manager
 ) => {
   if (err instanceof WorkerDisconnectedException) {
-    console.log('Socket disconnected');
-
-    await unblock_worker(manager.config, entity_token);
-
+    console.log(`Socket disconnected. Unblock worker ${worker_id}`);
+    await unblock_worker(manager.config, entity_tokens.get(worker_id)!);
+    entity_tokens.delete(worker_id);
     return;
   }
 
@@ -63,11 +55,16 @@ export const on_error: ErrorHandler = async (
   });
 
   manager.on('entity-token', async (data: EntityToken, manager) => {
-    entity_token = data.entity_token;
-    await block_worker(manager.config, entity_token);
+    console.log(`Start benchmark for ${data.worker_id}`);
+
+    entity_tokens.set(data.worker_id, data.entity_token);
+    await block_worker(manager.config, entity_tokens.get(data.worker_id)!);
+    manager.emit('perform-benchmark', null, data.worker_id);
   });
 
   manager.on('benchmark-finished', handle_benchmark_data);
 
-  await manager.launch(on_worker_connected, on_error);
+  await manager.launch(({ worker_id }) => {
+    console.log(`${worker_id} connected`);
+  }, on_error);
 })();
