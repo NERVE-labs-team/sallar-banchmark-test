@@ -16,29 +16,3 @@ export const report_data_to_node_manager = async (
     console.log(`Cannot post benchmark data. Reason: ${err}`);
   }
 };
-
-export const block_worker = async (
-  config: ManagerConfig,
-  entity_token: string
-) => {
-  try {
-    await axios.post(`${config.node_manager_server}/worker/block`, {
-      entity_token,
-    });
-  } catch (err) {
-    console.log(`Cannot block worker. Reason: ${err}`);
-  }
-};
-
-export const unblock_worker = async (
-  config: ManagerConfig,
-  entity_token: string
-) => {
-  try {
-    await axios.post(`${config.node_manager_server}/worker/unblock`, {
-      entity_token,
-    });
-  } catch (err) {
-    console.log(`Cannot unblock worker. Reason: ${err}`);
-  }
-};

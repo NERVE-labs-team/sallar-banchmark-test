@@ -1,17 +1,17 @@
 import { runInternetSppedTest } from './internet-speed.js';
 import { runWebGpuTest } from './gpu-points.js';
 import { runCpuTest } from './cpu-points.js';
+import { block_worker, unblock_worker } from './requests.js';
 
-const manager = new SallarNetworkClient.InstanceManager(io);
+(async () => {
+  const entityToken = window.location.href.split('#')[1].split(',')[2];
 
-console.log('I am ready');
-
-manager.emit('entity-token', {
-  entity_token: window.location.href.split('#')[1].split(',')[2],
-});
-
-manager.on('perform-benchmark', async (_, manager) => {
   try {
+    const manager = new SallarNetworkClient.InstanceManager(io);
+
+    await block_worker(entityToken);
+    console.log('Worker blocked');
+
     console.log('Measure internet speed...');
     const internetSpeed = await runInternetSppedTest();
     console.log(`Measured ${internetSpeed} Mb/s download speed`);
@@ -32,9 +32,12 @@ manager.on('perform-benchmark', async (_, manager) => {
       gpu_info: gpuInfo ? `${gpuInfo.vendor} ${gpuInfo.renderer}` : null,
       cpu_points: cpuPoints,
       internet_speed: internetSpeed,
+      entity_token: entityToken,
     });
   } catch (err) {
     console.log(`Error occurred: ${err}`);
-    manager.socket.disconnect();
   }
-});
+
+  await unblock_worker(entityToken);
+  console.log('Worker unblocked');
+})();
