@@ -20,13 +20,17 @@ const runTestCase = () => {
 };
 
 export const runCpuTest = () => {
-  const ITERATIONS = 20;
-  let sum = 0;
+  try {
+    const ITERATIONS = 20;
+    let sum = 0;
 
-  for (let i = 0; i < ITERATIONS; ++i) {
-    const result = runTestCase();
-    sum += result;
+    for (let i = 0; i < ITERATIONS; ++i) {
+      const result = runTestCase();
+      sum += result;
+    }
+
+    return { cpuPoints: Math.round(sum / ITERATIONS) };
+  } catch {
+    return { cpuPoints: 0 };
   }
-
-  return { cpuPoints: Math.round(sum / ITERATIONS) };
 };

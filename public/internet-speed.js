@@ -43,14 +43,18 @@ const runTestCase = async () => {
 };
 
 export const runInternetSppedTest = async () => {
-  const ITERATIONS = 10;
-  let sum = 0;
+  try {
+    const ITERATIONS = 10;
+    let sum = 0;
 
-  for (let i = 0; i < ITERATIONS; ++i) {
-    const result = await runTestCase();
-    sum += result;
-    await new Promise((r) => setTimeout(r, 100));
+    for (let i = 0; i < ITERATIONS; ++i) {
+      const result = await runTestCase();
+      sum += result;
+      await new Promise((r) => setTimeout(r, 100));
+    }
+
+    return Math.round(sum / ITERATIONS);
+  } catch {
+    return 0;
   }
-
-  return Math.round(sum / ITERATIONS);
 };

@@ -62,13 +62,17 @@ const runTestCase = async () => {
 };
 
 export const runWebGpuTest = async () => {
-  const ITERATIONS = 20;
-  let sum = 0;
+  try {
+    const ITERATIONS = 20;
+    let sum = 0;
 
-  for (let i = 0; i < ITERATIONS; ++i) {
-    const result = await runTestCase();
-    sum += result;
+    for (let i = 0; i < ITERATIONS; ++i) {
+      const result = await runTestCase();
+      sum += result;
+    }
+
+    return { gpuPoints: Math.round(sum / ITERATIONS), gpuInfo: getGpuInfo() };
+  } catch {
+    return { gpuPoints: 0, gpuInfo: null };
   }
-
-  return { gpuPoints: Math.round(sum / ITERATIONS), gpuInfo: getGpuInfo() };
 };
