@@ -1,9 +1,12 @@
 const cpuHeavyComputation = (iterations) => {
   let total = 0;
+  console.log('Run cpu heavy operation');
   for (let i = 0; i < iterations; i++) {
     const x = Math.sin(i) * Math.cos(i) * Math.tan(i % 360);
     total += x * x + Math.sqrt(Math.abs(x));
   }
+  console.log('End cpu heavy operation');
+
   return total;
 };
 
@@ -25,6 +28,7 @@ export const runCpuTest = () => {
     let sum = 0;
 
     for (let i = 0; i < ITERATIONS; ++i) {
+      console.log(`Cpu test #${i}`);
       const result = runTestCase();
       sum += result;
     }
