@@ -16,7 +16,7 @@ const mainBenchmark = async () => {
     return {
       gpu_points: gpuPoints,
       gpu_info: gpuInfo ? `${gpuInfo.vendor} ${gpuInfo.renderer}` : null,
-      internet_speed: 0,
+      internet_speed: internetSpeed,
     };
   } catch (err) {
     console.log(`Error occurred: ${err}`);

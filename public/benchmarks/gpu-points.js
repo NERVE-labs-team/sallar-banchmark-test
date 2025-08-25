@@ -5,7 +5,9 @@ const isMobileDevice = () => {
 const getGpuInfo = () => {
   const canvas = document.createElement('canvas');
   const gl =
-    canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    canvas.getContext('webgl2') ||
+    canvas.getContext('webgl') ||
+    canvas.getContext('experimental-webgl');
 
   if (!gl) {
     return 'WebGL not supported';
@@ -15,9 +17,17 @@ const getGpuInfo = () => {
   if (debugInfo) {
     const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
     const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-    return { vendor, renderer };
+    return {
+      vendor,
+      renderer,
+      extensions: gl.getSupportedExtensions(),
+    };
   } else {
-    return 'WEBGL_debug_renderer_info not supported';
+    return {
+      vendor: 'unknown',
+      renderer: 'unknown',
+      extensions: gl.getSupportedExtensions(),
+    };
   }
 };
 
@@ -74,9 +84,11 @@ const runTestCase = async () => {
   const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
 
   if (!gl) {
-    console.log('WebGL no available too');
+    console.log('WebGL not available too');
     return 0;
   }
+
+  const hasFragDepth = !!gl.getExtension('EXT_frag_depth');
 
   const vsSource = `
     attribute vec4 aPosition;
@@ -84,20 +96,43 @@ const runTestCase = async () => {
       gl_Position = aPosition;
     }`;
 
-  const fsSource = `
-    precision highp float;
-    void main(void) {
-      vec4 color = vec4(0.0);
-      for (int i = 0; i < 100; i++) {
-        color += vec4(0.01);
-      }
-      gl_FragColor = color;
-    }`;
+  // jeśli mamy EXT_frag_depth → użyjemy go, jeśli nie → prostszy shader
+  const fsSource = hasFragDepth
+    ? `
+      #ifdef GL_EXT_frag_depth
+      #extension GL_EXT_frag_depth : enable
+      #endif
+
+      precision highp float;
+      void main(void) {
+        vec4 color = vec4(0.0);
+        for (int i = 0; i < 100; i++) {
+          color += vec4(0.01);
+        }
+        gl_FragColor = color;
+
+        #ifdef GL_EXT_frag_depth
+          gl_FragDepthEXT = gl_FragColor.r;
+        #endif
+      }`
+    : `
+      precision highp float;
+      void main(void) {
+        vec4 color = vec4(0.0);
+        for (int i = 0; i < 100; i++) {
+          color += vec4(0.01);
+        }
+        gl_FragColor = color;
+      }`;
 
   function compileShader(type, source) {
     const shader = gl.createShader(type);
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
+
+    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+      console.error('Shader compile error:', gl.getShaderInfoLog(shader));
+    }
     return shader;
   }
 
@@ -108,6 +143,11 @@ const runTestCase = async () => {
   gl.attachShader(program, vertexShader);
   gl.attachShader(program, fragmentShader);
   gl.linkProgram(program);
+
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+    console.error('Program link error:', gl.getProgramInfoLog(program));
+  }
+
   gl.useProgram(program);
 
   const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
@@ -156,7 +196,8 @@ export const runWebGpuTest = async () => {
     }
 
     return { gpuPoints: Math.round(sum / ITERATIONS), gpuInfo };
-  } catch {
+  } catch (err) {
+    console.error('GPU test error:', err);
     return { gpuPoints: 0, gpuInfo };
   }
 };
